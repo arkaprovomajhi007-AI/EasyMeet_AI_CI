@@ -46,8 +46,8 @@ jobs:
               echo "label=Phase 1 security remediation PR #36" >> "$GITHUB_OUTPUT"
               ;;
             phase3)
-              echo "ref=refs/pull/35/merge" >> "$GITHUB_OUTPUT"
-              echo "label=Phase 3 provider integration PR #35" >> "$GITHUB_OUTPUT"
+              echo "ref=refs/pull/37/merge" >> "$GITHUB_OUTPUT"
+              echo "label=Phase 3 Microsoft personal Outlook compatibility PR #37" >> "$GITHUB_OUTPUT"
               ;;
             *)
               echo "::error::Unsupported target"
