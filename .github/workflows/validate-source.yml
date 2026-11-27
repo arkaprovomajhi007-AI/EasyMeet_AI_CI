@@ -6,29 +6,41 @@ on:
       target:
         description: "Which private source PR should be validated"
         required: true
+        default: both
         type: choice
         options:
           - phase1
           - phase3
+          - both
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/validate-source.yml"
+      - "README.md"
 
 permissions:
   contents: read
 
 concurrency:
-  group: easymeet-ci-${{ inputs.target }}
+  group: easymeet-ci-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:
   validate:
-    name: Validate ${{ inputs.target }}
+    name: Validate ${{ matrix.target }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ github.event_name == 'workflow_dispatch' && inputs.target != 'both' && fromJSON(format('["{0}"]', inputs.target)) || fromJSON('["phase1","phase3"]') }}
     steps:
       - name: Resolve source PR ref
         id: source
         shell: bash
         run: |
-          case "${{ inputs.target }}" in
+          case "${{ matrix.target }}" in
             phase1)
               echo "ref=refs/pull/36/merge" >> "$GITHUB_OUTPUT"
               echo "label=Phase 1 security remediation PR #36" >> "$GITHUB_OUTPUT"

@@ -1,22 +1,26 @@
 # EasyMeet AI — CI Runner
 
-This public repository contains **CI workflows only** for the private application repository [EasyMeet_AI](https://github.com/arkaprovomajhi007-AI/EasyMeet_AI).
+This public repository contains **CI workflows only** for the private application repository [EasyMeet_AI](https://github.com/arkaprovomajhi007-AI/EasyMeet_AI). All GitHub Actions validation for EasyMeet AI is initiated and executed from this repository; do not create a parallel application CI workflow in the private source repository.
 
 ## Run validation
 
-1. Add a fine-grained, read-only access token as repository secret `SOURCE_REPO_READ_TOKEN`. Grant access only to the private `EasyMeet_AI` repository and the Contents: Read-only permission.
-2. Open **Actions → EasyMeet source validation → Run workflow**.
-3. Select `phase1` to validate private PR #36 or `phase3` to validate private PR #35.
+1. Keep the fine-grained, read-only source token in repository secret `SOURCE_REPO_READ_TOKEN`. Scope it only to the private `EasyMeet_AI` repository with Contents: Read-only permission.
+2. For a manual run, open **Actions → EasyMeet source validation → Run workflow**.
+3. Select `phase1`, `phase3` or `both`. The default is `both`.
 
-The workflow checks out the selected pull request merge ref from the private repository and runs frontend type-check/build, server unit and Firestore emulator tests, server type-check and server build.
+The workflow checks out the selected private pull-request merge ref and runs frontend type-check/build, server unit and Firestore emulator tests, server type-check and server build.
 
-No application source, provider credentials, Firebase secrets, OAuth secrets or production data belong in this repository.
+## Automatic run convention
+
+A push to `main` in this CI repository that changes either this README or `.github/workflows/validate-source.yml` starts both Phase 1 and Phase 3 validations. After making a source-only implementation update in the private repository, the project execution process updates the **CI trigger marker** below in this README. That creates the CI-repository push event, so the latest private PR merge refs are revalidated without adding application code to this public repository.
+
+**CI trigger marker:** `2026-11-27 — Phase 3 Google OAuth cleanup implementation`
 
 ## Security boundaries
 
 - Workflow permissions are read-only.
 - The private source token is used only for checkout and is not persisted in the checkout configuration.
-- Do not add private application files or secrets to this public repository.
-- Keep deployments, production operations and live provider acceptance in the private project workflow.
+- Do not add private application files, provider credentials, Firebase secrets, OAuth secrets or production data to this public repository.
+- Deployments, production operations and live provider acceptance remain separate release gates.
 
-A successful CI run validates the checked-out PR merge ref only. It is not production acceptance or approval to merge/deploy.
+A successful CI run validates the PR merge ref checked out by that run only. It is not production acceptance or approval to merge/deploy.
