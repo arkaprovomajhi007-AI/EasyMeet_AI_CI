@@ -14,7 +14,7 @@ The workflow checks out the selected private pull-request merge ref and runs fro
 
 A push to `main` in this CI repository that changes either this README or `.github/workflows/validate-source.yml` starts both Phase 1 and Phase 3 validations. After making a source-only implementation update in the private repository, the project execution process updates the **CI trigger marker** below in this README. That creates the CI-repository push event, so the latest private PR merge refs are revalidated without adding application code to this public repository.
 
-**CI trigger marker:** `2026-11-27 — SEC-07 server lockfile and Docker npm ci`
+**CI trigger marker:** `2026-11-27 — SEC-07 lockfile CI cache race correction`
 
 ## Security boundaries
 
