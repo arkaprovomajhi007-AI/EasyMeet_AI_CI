@@ -8,13 +8,13 @@ This public repository contains **CI workflows only** for the private applicatio
 2. For a manual run, open **Actions → EasyMeet source validation → Run workflow**.
 3. Select `phase1`, `phase3` or `both`. The default is `both`.
 
-The workflow checks out the selected private pull-request merge ref and runs frontend type-check/build, reproducible server dependency installation with `npm ci`, server unit and Firestore emulator tests, server type-check and server build. A one-shot lockfile-generation job is available through the `[generate-server-lock]` push marker.
+The workflow checks out the selected private pull-request merge ref and runs frontend type-check/build, reproducible server dependency installation with `npm ci`, server unit and Firestore emulator tests, server type-check/build and a Docker image build for the selected source branch. A one-shot lockfile-generation job is available through the `[generate-server-lock]` push marker.
 
 ## Automatic run convention
 
 A push to `main` in this CI repository that changes either this README or `.github/workflows/validate-source.yml` starts both Phase 1 and Phase 3 validations. After making a source-only implementation update in the private repository, the project execution process updates the **CI trigger marker** below in this README. That creates the CI-repository push event, so the latest private PR merge refs are revalidated without adding application code to this public repository.
 
-**CI trigger marker:** `2026-11-27 — SEC-07 lockfile CI cache race correction`
+**CI trigger marker:** `2026-11-27 — SEC-07 Docker image build verification`
 
 ## Security boundaries
 

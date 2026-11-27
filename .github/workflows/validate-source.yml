@@ -119,6 +119,10 @@ jobs:
         working-directory: source/server
         run: npm run build
 
+      - name: Build server Docker image
+        working-directory: source/server
+        run: docker build --tag easymeet-ai-server-ci:${{ matrix.target }} .
+
   generate-server-lock:
     name: Generate server npm lockfile
     if: github.event_name == 'push' && contains(github.event.head_commit.message, '[generate-server-lock]')
