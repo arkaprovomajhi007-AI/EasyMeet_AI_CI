@@ -98,11 +98,11 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: source/server/package.json
+          cache-dependency-path: source/server/package-lock.json
 
       - name: Install server dependencies
         working-directory: source/server
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
