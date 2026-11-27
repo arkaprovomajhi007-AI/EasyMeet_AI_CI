@@ -1,0 +1,108 @@
+name: EasyMeet source validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which private source PR should be validated"
+        required: true
+        type: choice
+        options:
+          - phase1
+          - phase3
+
+permissions:
+  contents: read
+
+concurrency:
+  group: easymeet-ci-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Resolve source PR ref
+        id: source
+        shell: bash
+        run: |
+          case "${{ inputs.target }}" in
+            phase1)
+              echo "ref=refs/pull/36/merge" >> "$GITHUB_OUTPUT"
+              echo "label=Phase 1 security remediation PR #36" >> "$GITHUB_OUTPUT"
+              ;;
+            phase3)
+              echo "ref=refs/pull/35/merge" >> "$GITHUB_OUTPUT"
+              echo "label=Phase 3 provider integration PR #35" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unsupported target"
+              exit 1
+              ;;
+          esac
+
+      - name: Checkout private source (read-only token)
+        uses: actions/checkout@v4
+        with:
+          repository: arkaprovomajhi007-AI/EasyMeet_AI
+          ref: ${{ steps.source.outputs.ref }}
+          token: ${{ secrets.SOURCE_REPO_READ_TOKEN }}
+          path: source
+          persist-credentials: false
+
+      - name: Verify source ref
+        working-directory: source
+        run: |
+          echo "Validating ${{ steps.source.outputs.label }}"
+          git log -1 --oneline
+          test -f package.json
+          test -f bun.lock || test -f bun.lockb
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install frontend dependencies
+        working-directory: source
+        run: bun install --frozen-lockfile
+
+      - name: Frontend type-check
+        working-directory: source
+        run: bun run lint
+
+      - name: Frontend build
+        working-directory: source
+        run: bun run build
+
+      - name: Set up Java for Firestore emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: source/server/package.json
+
+      - name: Install server dependencies
+        working-directory: source/server
+        run: npm install --no-audit --no-fund
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Server unit and Firestore rules tests
+        working-directory: source/server
+        run: firebase emulators:exec --only firestore --project demo-easymeet-firestore-rules --config ../firebase.emulator.json "npm test"
+
+      - name: Server type-check
+        working-directory: source/server
+        run: npm run typecheck
+
+      - name: Server build
+        working-directory: source/server
+        run: npm run build
