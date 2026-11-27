@@ -118,3 +118,51 @@ jobs:
       - name: Server build
         working-directory: source/server
         run: npm run build
+
+  generate-server-lock:
+    name: Generate server npm lockfile
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[generate-server-lock]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout private Phase 1 source (read-only token)
+        uses: actions/checkout@v4
+        with:
+          repository: arkaprovomajhi007-AI/EasyMeet_AI
+          ref: refs/pull/36/merge
+          token: ${{ secrets.SOURCE_REPO_READ_TOKEN }}
+          path: source
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate reproducible server lockfile
+        working-directory: source/server
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Emit lockfile transfer payload
+        working-directory: source/server
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+
+          payload = base64.b64encode(Path("package-lock.json").read_bytes()).decode("ascii")
+          print("EASYMEET_PACKAGE_LOCK_B64_BEGIN")
+          for offset in range(0, len(payload), 6000):
+              print("EASYMEET_PACKAGE_LOCK_B64_CHUNK:" + payload[offset:offset + 6000])
+          print("EASYMEET_PACKAGE_LOCK_B64_END")
+          print(f"Generated package-lock.json: {Path('package-lock.json').stat().st_size} bytes")
+          PY
+
+      - name: Upload generated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: easymeet-server-package-lock
+          path: source/server/package-lock.json
+          if-no-files-found: error
+          retention-days: 2
